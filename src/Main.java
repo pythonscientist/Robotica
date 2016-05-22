@@ -1,19 +1,15 @@
-import java.awt.*;
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-
-import java.awt.image.ColorModel;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
-import java.awt.image.renderable.ParameterBlock;
 import java.io.File;
-
-import javax.imageio.ImageIO;
-import javax.media.jai.JAI;
-import javax.media.jai.KernelJAI;
 
 public class Main
 {
     public static BufferedImage limpaImagem(BufferedImage input) throws Exception {
+
+        System.out.println(String.format("Input size = %dx%dx%d", input.getWidth(), input.getHeight(), input.getType()));
+
         Raster raster = input.getRaster();
         //Cria rasterizador de saida
         BufferedImage outImg = new BufferedImage(raster.getWidth(), raster.getHeight(), input.getType());
@@ -44,6 +40,9 @@ public class Main
     }
 
     public static BufferedImage detectaRobo(BufferedImage input) throws Exception{
+
+        System.out.println(String.format("Input size = %dx%dx%d", input.getWidth(), input.getHeight(), input.getType()));
+
         Raster raster = input.getRaster();
         //Cria rasterizador de saida
         BufferedImage outImg = new BufferedImage(raster.getWidth(), raster.getHeight(), input.getType());
@@ -74,38 +73,146 @@ public class Main
         return outImg;
     }
 
+    private static BufferedImage desenhaGrid(BufferedImage input) {
 
-    private static BufferedImage aplicaErosao(BufferedImage input) {
-        float estrutura[] = {
-                0, 0, 0,
-                0, 1, 0,
-                0, 0, 0,
-        };
+        System.out.println(String.format("Input size = %dx%dx%d", input.getWidth(), input.getHeight(), input.getType()));
 
-        KernelJAI kernel = new KernelJAI(3, 3, estrutura);
-        ParameterBlock p = new ParameterBlock();
-        p.addSource(input);
-        p.add(kernel);
-        return  JAI.create("erode", p).getAsBufferedImage();
+        Raster raster = input.getRaster();
+        //Cria rasterizador de saida
+        BufferedImage outImg = new BufferedImage(raster.getWidth(), raster.getHeight(), BufferedImage.TYPE_BYTE_INDEXED);
+        WritableRaster wr = outImg.getRaster();
+
+        //Cria arrays com a quantidade de bytes por pixel
+        int[] pixel = new int[raster.getNumBands()];
+        int[] pixelOut = new int[pixel.length];
+
+        int pixels_largura = (int)(raster.getWidth() / 7.0f);
+        int pixels_altura  = (int)(raster.getHeight() / 6.0f);
+
+        //Loopa os pixels de entrada
+        for (int ix = 0; ix < raster.getWidth(); ++ix){
+            for (int iy = 0; iy < raster.getHeight(); iy++) {
+                //pega valor do pixel e joga no array
+                raster.getPixel(ix, iy, pixel);
+
+                if ((ix % pixels_largura) == 0 || (iy % pixels_altura) == 0) {
+                    for (int i = 0; i < pixel.length; ++i) {
+                        pixelOut[i] = 99;
+                    }
+                } else {
+                    for (int i = 0; i < pixel.length; ++i) {
+                        pixelOut[i] = pixel[i];
+                    }
+                }
+
+
+                //escreve pixel no raster de saida
+                wr.setPixel(ix, iy, pixelOut);
+            }
+        }
+
+        return outImg;
     }
 
-    private static BufferedImage aplicaErosao7(BufferedImage input) {
-        float estrutura[] = {
-                0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0,
-                0, 0, 1, 1, 1, 0, 0,
-                0, 0, 1, 1, 1, 0, 0,
-                0, 0, 1, 1, 1, 0, 0,
-                0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0,
 
-        };
+    private static float[][] porcentagemCor(BufferedImage input, int cor) {
 
-        KernelJAI kernel = new KernelJAI(7, 7, estrutura);
-        ParameterBlock p = new ParameterBlock();
-        p.addSource(input);
-        p.add(kernel);
-        return  JAI.create("erode", p).getAsBufferedImage();
+        System.out.println(String.format("Input size = %dx%dx%d", input.getWidth(), input.getHeight(), input.getType()));
+
+        float porcentagem_pixels[][] = new float[7][6];
+
+        Raster raster = input.getRaster();
+
+        //Cria arrays com a quantidade de bytes por pixel
+        int[] pixel = new int[raster.getNumBands()];
+        int[] pixelOut = new int[pixel.length];
+
+        int pixels_largura = (int)(raster.getWidth() / 7.0f);
+        int pixels_altura  = (int)(raster.getHeight() / 6.0f);
+        System.out.println(String.format("Pixel Largura = %d", pixels_largura));
+        System.out.println(String.format("Pixel Altura  = %d", pixels_altura));
+
+        int c_linha  = 0;
+        int c_coluna = 0;
+
+        int count_pixels[][] = new int[7][6];
+
+        //Loopa os pixels de entrada
+        for (int ix = 0; ix < raster.getWidth(); ++ix){
+            for (int iy = 0; iy < raster.getHeight(); iy++) {
+                //pega valor do pixel e joga no array
+                raster.getPixel(ix, iy, pixel);
+
+                // largura
+                if (ix <= pixels_largura) {
+                    c_linha = 0;
+                } else
+
+                if (ix <= pixels_largura*2) {
+                    c_linha = 1;
+                } else
+
+                if (ix <= pixels_largura*3) {
+                    c_linha = 2;
+                } else
+
+                if (ix <= pixels_largura*4) {
+                    c_linha = 3;
+                } else
+
+                if (ix <= pixels_largura*5) {
+                    c_linha = 4;
+                } else
+
+                if (ix <= pixels_largura*6) {
+                    c_linha = 5;
+                } else
+
+                if (ix <= pixels_largura*7) {
+                    c_linha = 6;
+                }
+
+                // altura
+                if (iy <= pixels_altura) {
+                    c_coluna = 0;
+                } else
+
+                if (iy <= pixels_altura*2) {
+                    c_coluna = 1;
+                } else
+
+                if (iy <= pixels_altura*3) {
+                    c_coluna = 2;
+                } else
+
+                if (iy <= pixels_altura*4) {
+                    c_coluna = 3;
+                } else
+
+                if (iy <= pixels_altura*5) {
+                    c_coluna = 4;
+                } else
+
+                if (iy <= pixels_altura*6) {
+                    c_coluna = 5;
+                }
+
+                if (pixel[0] == cor) {
+                    count_pixels[c_linha][c_coluna] += 1;
+                }
+
+            }
+        }
+
+        for (int i=0; i<7; i++) {
+            for (int j=0; j<6; j++) {
+                Float porcentagem = Float.valueOf(count_pixels[i][j]) / Float.valueOf(pixels_altura*pixels_largura);
+                System.out.println(String.format("%dx%d = %f", i, j, porcentagem.floatValue() * 100));
+                porcentagem_pixels[i][j] = porcentagem.floatValue() * 100;
+            }
+        }
+
+        return porcentagem_pixels;
     }
 
     public static void main(String args[]) throws Exception{
@@ -114,15 +221,45 @@ public class Main
 
         BufferedImage input = ImageIO.read(new File("c://Temp/img/Teste.gif"));
 
-
         System.setProperty("com.sun.media.jai.disableMediaLib", "true");
         BufferedImage limpo = limpaImagem(input);
+
         BufferedImage robo = detectaRobo(input);
-        BufferedImage erosao = aplicaErosao(robo);
-        BufferedImage mapa = aplicaErosao7(limpo);
 
+        BufferedImage mapa = desenhaGrid(limpo);
+        float[][] porcentagem_pixel_preto  = porcentagemCor(mapa, 0);
+        float[][] porcentagem_pixel_branco = porcentagemCor(robo, 255);
 
-        ImageIO.write(mapa, "GIF", new File("c://temp/output/dilate.gif"));
+        float[][] matrix_final = processaMatrixFinal(porcentagem_pixel_preto, porcentagem_pixel_branco, 10.0f, 15.0f);
+
+        ImageIO.write(mapa, "GIF", new File("c://temp/output/mapa.gif"));
+        ImageIO.write(robo, "GIF", new File("c://temp/output/robo.gif"));
     }
 
+    private static float[][] processaMatrixFinal(float[][] porcentagem_mapa, float[][] porcentagem_robo,
+                                                    float threshold_mapa, float threshold_robo) {
+
+        float mapa_final[][] = new float[7][6];
+        for (int i=0; i<7; i++) {
+            for (int j = 0; j < 6; j++) {
+
+                if (porcentagem_mapa[i][j] > threshold_mapa) {
+                    mapa_final[i][j] = 1.0f;
+                }
+
+                if (porcentagem_robo[i][j] > threshold_robo) {
+                    mapa_final[i][j] = 2.0f;
+                }
+
+            }
+        }
+
+        System.out.println("Mapa Final");
+        for (int i=0; i<7; i++) {
+            for (int j=0; j<6; j++) {
+                System.out.println(String.format("%dx%d = %f", i, j, mapa_final[i][j]));
+            }
+        }
+        return mapa_final;
+    }
 }
