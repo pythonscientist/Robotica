@@ -119,23 +119,22 @@ public class Main
 
         System.out.println(String.format("Input size = %dx%dx%d", input.getWidth(), input.getHeight(), input.getType()));
 
-        float porcentagem_pixels[][] = new float[7][6];
+        float porcentagem_pixels[][] = new float[6][7];
 
         Raster raster = input.getRaster();
 
         //Cria arrays com a quantidade de bytes por pixel
         int[] pixel = new int[raster.getNumBands()];
-        int[] pixelOut = new int[pixel.length];
 
-        int pixels_largura = (int)(raster.getWidth() / 7.0f);
-        int pixels_altura  = (int)(raster.getHeight() / 6.0f);
-        System.out.println(String.format("Pixel Largura = %d", pixels_largura));
-        System.out.println(String.format("Pixel Altura  = %d", pixels_altura));
+        int pixels_altura = (int)(raster.getHeight() / 6.0f);
+        int pixels_largura  = (int)(raster.getWidth()/ 7.0f);
+        System.out.println(String.format("Pixel Largura = %d", pixels_altura));
+        System.out.println(String.format("Pixel Altura  = %d", pixels_largura));
 
         int c_linha  = 0;
         int c_coluna = 0;
 
-        int count_pixels[][] = new int[7][6];
+        int count_pixels[][] = new int[6][7];
 
         //Loopa os pixels de entrada
         for (int ix = 0; ix < raster.getWidth(); ++ix){
@@ -145,57 +144,58 @@ public class Main
 
                 // largura
                 if (ix <= pixels_largura) {
-                    c_linha = 0;
+                    c_coluna = 0;
                 } else
 
                 if (ix <= pixels_largura*2) {
-                    c_linha = 1;
+                    c_coluna = 1;
                 } else
 
                 if (ix <= pixels_largura*3) {
-                    c_linha = 2;
+                    c_coluna = 2;
                 } else
 
                 if (ix <= pixels_largura*4) {
-                    c_linha = 3;
+                    c_coluna = 3;
                 } else
 
                 if (ix <= pixels_largura*5) {
-                    c_linha = 4;
+                    c_coluna = 4;
                 } else
 
                 if (ix <= pixels_largura*6) {
-                    c_linha = 5;
-                } else
+                    c_coluna = 5;
+                }else
 
                 if (ix <= pixels_largura*7) {
-                    c_linha = 6;
+                    c_coluna = 6;
                 }
 
                 // altura
                 if (iy <= pixels_altura) {
-                    c_coluna = 0;
+                    c_linha = 0;
                 } else
 
                 if (iy <= pixels_altura*2) {
-                    c_coluna = 1;
+                    c_linha = 1;
                 } else
 
                 if (iy <= pixels_altura*3) {
-                    c_coluna = 2;
+                    c_linha = 2;
                 } else
 
                 if (iy <= pixels_altura*4) {
-                    c_coluna = 3;
+                    c_linha = 3;
                 } else
 
                 if (iy <= pixels_altura*5) {
-                    c_coluna = 4;
+                    c_linha = 4;
                 } else
 
                 if (iy <= pixels_altura*6) {
-                    c_coluna = 5;
+                    c_linha = 5;
                 }
+
 
                 if (pixel[0] == cor) {
                     count_pixels[c_linha][c_coluna] += 1;
@@ -204,9 +204,10 @@ public class Main
             }
         }
 
-        for (int i=0; i<7; i++) {
-            for (int j=0; j<6; j++) {
-                Float porcentagem = Float.valueOf(count_pixels[i][j]) / Float.valueOf(pixels_altura*pixels_largura);
+        System.out.println("Porcentagem mapa");
+        for (int i=0; i<6; i++) {
+            for (int j=0; j<7; j++) {
+                Float porcentagem = Float.valueOf(count_pixels[i][j]) / Float.valueOf(pixels_largura*pixels_altura);
                 System.out.println(String.format("%dx%d = %f", i, j, porcentagem.floatValue() * 100));
                 porcentagem_pixels[i][j] = porcentagem.floatValue() * 100;
             }
@@ -236,21 +237,32 @@ public class Main
         BufferedImage mapa_final = desenhaMapaFinal(matrix_final, mapa.getWidth(), mapa.getHeight(), BufferedImage.TYPE_BYTE_INDEXED);
         mapa_final = desenhaGrid(mapa_final);
 
+        float[][] matrix_wavefront = montaWavefront(matrix_final, 6.0f, 6.0f);
+
         ImageIO.write(mapa, "GIF", new File("c://temp/output/mapa.gif"));
         ImageIO.write(robo, "GIF", new File("c://temp/output/robo.gif"));
         ImageIO.write(mapa_final, "GIF", new File("c://temp/output/mapa_final.gif"));
     }
 
+    private static float[][] montaWavefront(float[][] matrix_final, float dest_x, float dest_y) {
+        return null;
+    }
+
+    private static void bfs() {
+
+    }
+
+
     private static BufferedImage desenhaMapaFinal(float[][] matrix_final, int width, int height, int type) {
         BufferedImage outImg = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED);
         WritableRaster wr = outImg.getRaster();
-        int pixels_largura = (int)(width / 7.0f);
-        int pixels_altura  = (int)(height / 6.0f);
+        int pixels_altura = (int)(height / 6.0f);
+        int pixels_largura  = (int)(width/ 7.0f);
         System.out.println(String.format("Pixel Largura = %d", pixels_largura));
         System.out.println(String.format("Pixel Altura  = %d", pixels_altura));
 
-        for (int i=0; i<7; i++) {
-            for (int j = 0; j < 6; j++) {
+        for (int i=0; i<6; i++) {
+            for (int j = 0; j <7; j++) {
                 if (matrix_final[i][j] == 1.0f) {
                     desenhaRetangulo(i, j, pixels_altura, pixels_largura, width, height, wr, 0);
                 } else
@@ -269,15 +281,23 @@ public class Main
 
     private static void desenhaRetangulo(int i, int j, int pixels_altura, int pixels_largura, int width, int height, WritableRaster wr, int cor) {
         int pixelOut[] = {cor};
-        for (int x=0; x<pixels_largura; x++) {
-            for (int y=0; y<pixels_altura; y++) {
+        for (int y=0; y<pixels_altura; y++) {
+            for (int x=0; x<pixels_largura; x++) {
 
-                int rx = (i*pixels_largura)+x;
-                int ry = (j*pixels_altura)+y;
+                // aqui inverte o i e o j pois o i corresponde a contagem dos quadrados da largura e o j corresponde a linha
+                int rx = (j*pixels_largura)+x;
+                int ry = (i*pixels_altura)+y;
 
-                if (rx < width && ry < width) {
-                    wr.setPixel(rx, ry, pixelOut);
+                if (rx>width) {
+                    throw  new RuntimeException("rx maior que Width");
                 }
+
+                if (ry>height) {
+                    throw  new RuntimeException("ry maior que Height");
+                }
+                
+                wr.setPixel(rx, ry, pixelOut);
+
             }
         }
     }
@@ -285,9 +305,9 @@ public class Main
     private static float[][] processaMatrixFinal(float[][] porcentagem_mapa, float[][] porcentagem_robo,
                                                     float threshold_mapa, float threshold_robo) {
 
-        float mapa_final[][] = new float[7][6];
-        for (int i=0; i<7; i++) {
-            for (int j = 0; j < 6; j++) {
+        float mapa_final[][] = new float[6][7];
+        for (int i=0; i<6; i++) {
+            for (int j = 0; j < 7; j++) {
 
                 if (porcentagem_mapa[i][j] > threshold_mapa) {
                     mapa_final[i][j] = 1.0f;
@@ -301,8 +321,8 @@ public class Main
         }
 
         System.out.println("Mapa Final");
-        for (int i=0; i<7; i++) {
-            for (int j=0; j<6; j++) {
+        for (int i=0; i<6; i++) {
+            for (int j=0; j<7; j++) {
                 System.out.println(String.format("%dx%d = %f", i, j, mapa_final[i][j]));
             }
         }
