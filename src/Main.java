@@ -225,6 +225,7 @@ public class Main
         BufferedImage limpo = limpaImagem(input);
 
         BufferedImage robo = detectaRobo(input);
+        robo = desenhaGrid(robo);
 
         BufferedImage mapa = desenhaGrid(limpo);
         float[][] porcentagem_pixel_preto  = porcentagemCor(mapa, 0);
@@ -232,8 +233,53 @@ public class Main
 
         float[][] matrix_final = processaMatrixFinal(porcentagem_pixel_preto, porcentagem_pixel_branco, 10.0f, 15.0f);
 
+        BufferedImage mapa_final = desenhaMapaFinal(matrix_final, mapa.getWidth(), mapa.getHeight(), BufferedImage.TYPE_BYTE_INDEXED);
+        mapa_final = desenhaGrid(mapa_final);
+
         ImageIO.write(mapa, "GIF", new File("c://temp/output/mapa.gif"));
         ImageIO.write(robo, "GIF", new File("c://temp/output/robo.gif"));
+        ImageIO.write(mapa_final, "GIF", new File("c://temp/output/mapa_final.gif"));
+    }
+
+    private static BufferedImage desenhaMapaFinal(float[][] matrix_final, int width, int height, int type) {
+        BufferedImage outImg = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED);
+        WritableRaster wr = outImg.getRaster();
+        int pixels_largura = (int)(width / 7.0f);
+        int pixels_altura  = (int)(height / 6.0f);
+        System.out.println(String.format("Pixel Largura = %d", pixels_largura));
+        System.out.println(String.format("Pixel Altura  = %d", pixels_altura));
+
+        for (int i=0; i<7; i++) {
+            for (int j = 0; j < 6; j++) {
+                if (matrix_final[i][j] == 1.0f) {
+                    desenhaRetangulo(i, j, pixels_altura, pixels_largura, width, height, wr, 0);
+                } else
+
+                if (matrix_final[i][j] == 2.0f) {
+                    desenhaRetangulo(i, j, pixels_altura, pixels_largura, width, height, wr, 33);
+                } else {
+                    desenhaRetangulo(i, j, pixels_altura, pixels_largura, width, height, wr, 255);
+                }
+
+            }
+        }
+
+        return outImg;
+    }
+
+    private static void desenhaRetangulo(int i, int j, int pixels_altura, int pixels_largura, int width, int height, WritableRaster wr, int cor) {
+        int pixelOut[] = {cor};
+        for (int x=0; x<pixels_largura; x++) {
+            for (int y=0; y<pixels_altura; y++) {
+
+                int rx = (i*pixels_largura)+x;
+                int ry = (j*pixels_altura)+y;
+
+                if (rx < width && ry < width) {
+                    wr.setPixel(rx, ry, pixelOut);
+                }
+            }
+        }
     }
 
     private static float[][] processaMatrixFinal(float[][] porcentagem_mapa, float[][] porcentagem_robo,
