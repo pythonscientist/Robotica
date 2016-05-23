@@ -3,6 +3,8 @@ import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.io.File;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class Main
 {
@@ -237,19 +239,151 @@ public class Main
         BufferedImage mapa_final = desenhaMapaFinal(matrix_final, mapa.getWidth(), mapa.getHeight(), BufferedImage.TYPE_BYTE_INDEXED);
         mapa_final = desenhaGrid(mapa_final);
 
-        float[][] matrix_wavefront = montaWavefront(matrix_final, 6.0f, 6.0f);
+        // monta a matriz de wavefront
+        montaWavefront(matrix_final, 27);
+        for (int i=0; i<6; i++) {
+            for (int j=0; j<7; j++) {
+                System.out.print(String.valueOf(matrix_final[i][j]) + ", ");
+            }
+            System.out.println();
+        }
 
         ImageIO.write(mapa, "GIF", new File("c://temp/output/mapa.gif"));
         ImageIO.write(robo, "GIF", new File("c://temp/output/robo.gif"));
         ImageIO.write(mapa_final, "GIF", new File("c://temp/output/mapa_final.gif"));
     }
 
-    private static float[][] montaWavefront(float[][] matrix_final, float dest_x, float dest_y) {
-        return null;
+    static int[][] grafo = { {0, 0, 0, 0},
+    /*1 -> */  { 2, 8, 0, 0},
+    /*2 -> */  {3, 9, 1, 0},
+    /*3 -> */  {4, 10, 2, 0},
+    /*4 -> */  {5, 11, 3, 0},
+    /*5 -> */  {6, 12, 4, 0},
+    /*6 -> */  {7, 13, 5, 0},
+    /*7 -> */  {10, 6, 0, 0},
+    /*8 -> */  {9, 15, 1, 0},
+    /*9 -> */  {10, 16, 8, 2},
+    /*10 -> */ {11, 17, 9, 3},
+    /*11 -> */ {12, 18, 10, 4},
+    /*12 -> */ {13, 19, 11, 5},
+    /*13 -> */ {14, 20, 12, 6},
+    /*14 -> */ {21, 13, 7, 0},
+    /*15 -> */ {16, 22, 8, 0},
+    /*16 -> */ {17, 23, 15, 9},
+    /*17 -> */ {18, 24, 16, 10},
+    /*18 -> */ {19, 25, 17, 11},
+    /*19 -> */ {20, 26, 18, 12},
+    /*20 -> */ {21, 27, 19, 13},
+    /*21 -> */ {28, 20, 14, 0},
+    /*22 -> */ {23, 29, 15, 0},
+    /*23 -> */ {24, 30, 22, 16},
+    /*24 -> */ {25, 31, 23, 17},
+    /*25 -> */ {26, 32, 24, 18},
+    /*26 -> */ {27, 33, 25, 19},
+    /*27 -> */ {28, 34, 26, 20},
+    /*28 -> */ {35, 27, 21, 0},
+    /*29 -> */ {30, 36, 22, 0},
+    /*30 -> */ {31, 37, 29, 23},
+    /*31 -> */ {32, 38, 30, 24},
+    /*32 -> */ {33, 39, 31, 25},
+    /*33 -> */ {34, 40, 32, 26},
+    /*34 -> */ {35, 41, 33, 27},
+    /*35 -> */ {42, 34, 28, 0},
+    /*36 -> */ {37, 29, 0, 0},
+    /*37 -> */ {38, 36, 30, 0},
+    /*38 -> */ {39, 37, 31, 0},
+    /*39 -> */ {40, 38, 32, 0},
+    /*40 -> */ {41, 39, 33, 0},
+    /*41 -> */ {42, 40, 34, 0},
+    /*42 -> */ {41, 35, 0, 0}};
+
+    static class Pos {
+        public Pos(int x, int y) {this.x = x; this.y = y;}
+        public int x, y;
     }
 
-    private static void bfs() {
+    static Pos[] positions = {null,
+            new Pos(0, 0),
+            new Pos(0, 1),
+            new Pos(0, 2),
+            new Pos(0, 3),
+            new Pos(0, 4),
+            new Pos(0, 5),
+            new Pos(0, 6),
+            new Pos(1, 0),
+            new Pos(1, 1),
+            new Pos(1, 2),
+            new Pos(1, 3),
+            new Pos(1, 4),
+            new Pos(1, 5),
+            new Pos(1, 6),
+            new Pos(2, 0),
+            new Pos(2, 1),
+            new Pos(2, 2),
+            new Pos(2, 3),
+            new Pos(2, 4),
+            new Pos(2, 5),
+            new Pos(2, 6),
+            new Pos(3, 0),
+            new Pos(3, 1),
+            new Pos(3, 2),
+            new Pos(3, 3),
+            new Pos(3, 4),
+            new Pos(3, 5),
+            new Pos(3, 6),
+            new Pos(4, 0),
+            new Pos(4, 1),
+            new Pos(4, 2),
+            new Pos(4, 3),
+            new Pos(4, 4),
+            new Pos(4, 5),
+            new Pos(4, 6),
+            new Pos(5, 0),
+            new Pos(5, 1),
+            new Pos(5, 2),
+            new Pos(5, 3),
+            new Pos(5, 4),
+            new Pos(5, 5),
+            new Pos(5, 6)
+    };
 
+    private static void montaWavefront(float[][] matrix_final, int orig) {
+        int[] visitados = new int[43];
+        int[] values    = new int[43];
+        Queue<Integer> queue = new LinkedList<>();
+
+        int atual = orig;
+        int[] nodo = grafo[atual];
+
+
+        values[atual] = 2;
+
+        while (true) {
+
+            visitados[atual] = 1;
+
+            for (int i=0; i<4; i++) {
+                if (nodo[i] == 0) break;
+                if (visitados[nodo[i]] == 1) continue;
+
+                int x = positions[nodo[i]].x;
+                int y = positions[nodo[i]].y;
+
+                if (matrix_final[x][y] == 1.0) continue;
+                if (matrix_final[x][y] == 2.0) continue;
+
+                matrix_final[x][y] = values[atual]+1;
+                values[nodo[i]] = values[atual]+1;
+                queue.add(nodo[i]);
+            }
+
+            if (queue.isEmpty())
+                break;
+
+            atual = queue.poll();
+            nodo = grafo[atual];
+
+        }
     }
 
 
@@ -295,7 +429,7 @@ public class Main
                 if (ry>height) {
                     throw  new RuntimeException("ry maior que Height");
                 }
-                
+
                 wr.setPixel(rx, ry, pixelOut);
 
             }
@@ -304,7 +438,6 @@ public class Main
 
     private static float[][] processaMatrixFinal(float[][] porcentagem_mapa, float[][] porcentagem_robo,
                                                     float threshold_mapa, float threshold_robo) {
-
         float mapa_final[][] = new float[6][7];
         for (int i=0; i<6; i++) {
             for (int j = 0; j < 7; j++) {
